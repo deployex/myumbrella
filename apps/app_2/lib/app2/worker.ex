@@ -20,21 +20,41 @@ defmodule App2.Worker do
 
     schedule_new_deployment(interval)
 
-    {:ok, %{interval: interval}}
+    {:ok, %{interval: interval, last_tick_at: nil}}
   end
 
   @impl true
   def handle_info(:schedule, state) do
     schedule_new_deployment(state.interval)
 
-    Logger.info("Running #{__MODULE__} Scheduler (/•ิ_•ิ) 🔥 (╯°□°)╯ 🔥🔥🔥🔥🔥 ")
+    last_tick_at = DateTime.utc_now()
 
-    {:noreply, state}
+    Logger.info(
+      "Running #{__MODULE__} Scheduler (/•ิ_•ิ) 🔥 (╯°□°)╯ 🔥🔥🔥🔥🔥  last_tick_at=#{last_tick_at}"
+    )
+
+    {:noreply, %{state | last_tick_at: last_tick_at}}
+  end
+
+  @impl true
+  def handle_call(:last_tick_at, _from, state) do
+    {:reply, state.last_tick_at, state}
+  end
+
+  # Runs when a hot upgrade installs a version whose state shape changed.
+  # Older state has no :last_tick_at key, so it is added rather than assumed.
+  @impl true
+  def code_change(_old_vsn, state, _extra) do
+    Logger.info("Hot-upgrading #{__MODULE__} state")
+
+    {:ok, Map.put_new(state, :last_tick_at, nil)}
   end
 
   ### ==========================================================================
   ### Public API
   ### ==========================================================================
+
+  def last_tick_at, do: GenServer.call(__MODULE__, :last_tick_at)
 
   ### ==========================================================================
   ### Private functions
