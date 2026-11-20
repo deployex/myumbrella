@@ -28,9 +28,22 @@ MIX_ENV=prod mix compile --force
 MIX_ENV=prod mix release
 ```
 
+## Static Assets and Hot Upgrades
+
+`assets.deploy` does not run `phx.digest`, and `cache_static_manifest` is left unset in `config/prod.exs`.
+A hot upgrade overwrites `priv/static` in place on the running node, so a content-hashed filename would 404 for any browser tab that loaded the page before the upgrade.
+Serving stable, undigested filenames keeps already-open sessions working across an upgrade.
+This also means `Plug.Static`'s `gzip` option stays `false` in `app_web_web/endpoint.ex`, since there is no digest step producing pre-gzipped copies to serve.
+
+## Continuous Integration
+
+Every pull request is checked by [relup-guard-elixir][rge], which builds the release at the PR's base and head commits and runs a real relup install between them.
+This catches hot-upgrade regressions before they merge.
+
 ## Observer Web Notes
 
 If using Observer Web, install it in only one app (recommended: the LiveView web app).
 
-[dye]: https://github.com/thiagoesteves/deployex
+[dye]: https://github.com/deployex/deployex
+[rge]: https://github.com/deployex/relup-guard-elixir
 

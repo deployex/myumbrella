@@ -77,8 +77,7 @@ defmodule AppWeb.MixProject do
       "assets.build": ["tailwind app_web", "esbuild app_web"],
       "assets.deploy": [
         "tailwind app_web --minify",
-        "esbuild app_web --minify",
-        "phx.digest"
+        "esbuild app_web --minify"
       ]
     ]
   end

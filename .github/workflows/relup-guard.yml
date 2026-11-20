@@ -1,0 +1,28 @@
+name: Verify hot upgrade
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  relup-guard-elixir:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      - uses: deployex/relup-guard-elixir@v1
+        env:
+          # Only needed to boot the release during this CI check, not a real secret.
+          SECRET_KEY_BASE: 4e4e1856e9dc5462d1fc8e00f383220633c6fcd67fffe65dbfed3e0829491242
+        with:
+          old-ref: ${{ github.event.pull_request.base.sha }}
+          release-name: myumbrella
+          build-command: mix deps.get && mix assets.deploy && mix release
